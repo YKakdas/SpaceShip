@@ -33,16 +33,23 @@ GLint numVerticesOfPlanet;
 GLint numVerticesOfTorus;
 GLint numVerticesOfTetrahedron = 12;
 
+GLint radiusShip = 3.0;
+
 GLint ModelView, Projection;
 
 GLint translatePos;
 vec4 translate;
+vec4 translateShip = vec4(105.0, 15.0, 0.0, 1.0);
 GLint thetaPos;
 vec3 Theta;
 
 point4 at(105.0, 15.0, -3.0, 1.0);
 point4 eye(105.0, 15.0, -0.8, 1.0);
 vec4 up(0.0, 1.0, 0.0, 0.0);
+
+vec4 direction(0.0, 0.0, -1.0, 0.0);
+vec4 movedAway = (0.0, 0.0, 0.0, 1.0);
+bool isEyeMove = true;
 
 vec4 planet_coords[8] = { {30, 30, -30,1},
 {30, 15,-170,1},
@@ -346,8 +353,7 @@ void myDisplay(void) {
 	glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet * 8, numVerticesOfPlanet);
 
 	for (int i = 0; i < 2; i++) {
-		translate = vec4(105.0, 15.0, 0.0, 1.0);
-		glUniform4fv(translatePos, 1, translate);
+		glUniform4fv(translatePos, 1, translateShip);
 		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i, numVerticesOfTorus);
 	}
 
@@ -360,27 +366,47 @@ void myDisplay(void) {
 
 void myKeyboard(unsigned char key, int x, int y) {
 	if (key == 'c') {
-		eye = vec4(105.0, 15.0, -0.8, 1.0);
-		at = vec4(105.0, 15.0, -3.0, 1.0);
+		isEyeMove = true;
+		eye.x = 105.0;
+		eye.y = 15.0;
+		eye.z = movedAway.z - radiusShip;
+		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
 	else if (key == 's') {
+		isEyeMove = false;
 		eye = vec4(100.0, 10.0, -13.0, 1.0);
 		at = vec4(100.0, 10.0, -15.0, 1.0);
 		glutPostRedisplay();
 	}
 	else if (key == 't') {
-		eye = vec4(105.0, 15.0, 1.8, 1.0);
-		at = vec4(105.0, 15.0, -3.0, 1.0);
+		isEyeMove = true;
+		eye.x = 105.0;
+		eye.y = 15.0;
+		at.x = eye.x;
+		at.y = eye.y;
+		eye.z = movedAway.z + radiusShip;
+		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
 	else if (key == 'w') {
+		isEyeMove = false;
 		eye = vec4(105.0, 15.0, 20.0, 1.0);
 		at = vec4(105.0, 15.0, -3.0, 1.0);
 		glutPostRedisplay();
 	}
 }
+void myTimer(int id) {
+	translateShip += direction;
+	if (isEyeMove) {
+		eye += direction;
+		at += direction;
+	}
+	movedAway += direction;
 
+	glutPostRedisplay();
+	glutTimerFunc(1000, myTimer, 0);
+}
 void myReshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	GLfloat aspect = GLfloat(w) / h;
@@ -400,6 +426,7 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(myDisplay);
 	glutReshapeFunc(myReshape);
 	glutKeyboardFunc(myKeyboard);
+	glutTimerFunc(1000, myTimer, 0);
 	glutMainLoop();
 	return 0;
 }
