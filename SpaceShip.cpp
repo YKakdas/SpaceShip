@@ -31,6 +31,7 @@ vector<point4> specular_products;
 
 GLint numVerticesOfPlanet;
 GLint numVerticesOfTorus;
+GLint numVerticesOfTetrahedron = 12;
 
 GLint ModelView, Projection;
 
@@ -38,6 +39,11 @@ GLint translatePos;
 vec4 translate;
 GLint thetaPos;
 vec3 Theta;
+
+point4 at(105.0, 15.0, -3.0, 1.0);
+point4 eye(105.0, 15.0, -0.8, 1.0);
+vec4 up(0.0, 1.0, 0.0, 0.0);
+
 vec4 planet_coords[8] = { {30, 30, -30,1},
 {30, 15,-170,1},
 {80, 25,-110,1},
@@ -46,6 +52,11 @@ vec4 planet_coords[8] = { {30, 30, -30,1},
 {120, 17,-80,1},
 {150, 15, -40,1},
 {160, 22, -170,1} };
+
+vec4 stationCoord = vec4(100.0, 10.0, -10.0, 1.0);
+vec4 stationAmbient = vec4(0.5, 0.5, 0.5, 1.0);
+vec4 stationDiffuse = vec4(0.5, 0.5, 0.5, 1.0);
+vec4 stationSpecular = vec4(0.5, 0.5, 0.5, 1.0);
 
 
 /*colors(rgb) for each planet */
@@ -110,8 +121,8 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 
 void fillTorus1() {
 	int numVertices = 0;
-	float innerRadius = 1.0;
-	float outerRadius = 7.8;
+	float innerRadius = 0.1;
+	float outerRadius = 0.78;
 
 	float innerAngle;
 	float outerAngle;
@@ -164,8 +175,8 @@ void pushColor() {
 	specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
 }
 void fillTorus2() {
-	float innerRadius = 1.0;
-	float outerRadius = 10.0;
+	float innerRadius = 0.1;
+	float outerRadius = 1.0;
 
 	float innerAngle;
 	float outerAngle;
@@ -243,15 +254,14 @@ void fillTetraHedron() {
 void init() {
 
 	for (int i = 0; i < 8; i++) {
-		numVerticesOfPlanet = fillPlanetPoints(4, ambient_colors[i], diffuse_colors[i], specular_colors[i]);
+		numVerticesOfPlanet = fillPlanetPoints(2, ambient_colors[i], diffuse_colors[i], specular_colors[i]);
 	}
-
+	fillPlanetPoints(3, stationAmbient, stationDiffuse, stationSpecular);
 	fillTorus1();
 	fillTorus2();
+	fillTetraHedron();
 
-	//	fillTetraHedron();
-
-		// Create a vertex array object
+	// Create a vertex array object
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -319,9 +329,7 @@ void init() {
 
 void myDisplay(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	point4 at(105.0, 15.0, -1.0, 1.0);
-	point4 eye(105.0, 15.0, 100.0, 1.0);
-	vec4 up(0.0, 1.0, 0.0, 0.0);
+
 
 	mat4 model_view = LookAt(eye, at, up);
 	glUniformMatrix4fv(ModelView, 1, GL_TRUE, model_view);
@@ -333,15 +341,46 @@ void myDisplay(void) {
 		glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet*i, numVerticesOfPlanet);
 	}
 
+	translate = stationCoord;
+	glUniform4fv(translatePos, 1, translate);
+	glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet * 8, numVerticesOfPlanet);
+
 	for (int i = 0; i < 2; i++) {
-		translate = vec4(105.0,15.0,0.0,1.0);
+		translate = vec4(105.0, 15.0, 0.0, 1.0);
 		glUniform4fv(translatePos, 1, translate);
-		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet*8 + numVerticesOfTorus*i, numVerticesOfTorus);
+		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i, numVerticesOfTorus);
 	}
 
+	//	translate = vec4(105.0, 15.0, -2.8, 1.0);
+	//	glUniform4fv(translatePos, 1, translate);
+	//	glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 8 + numVerticesOfTorus * 2, numVerticesOfTetrahedron);
 
 	glutSwapBuffers();
 }
+
+void myKeyboard(unsigned char key, int x, int y) {
+	if (key == 'c') {
+		eye = vec4(105.0, 15.0, -0.8, 1.0);
+		at = vec4(105.0, 15.0, -3.0, 1.0);
+		glutPostRedisplay();
+	}
+	else if (key == 's') {
+		eye = vec4(100.0, 10.0, -13.0, 1.0);
+		at = vec4(100.0, 10.0, -15.0, 1.0);
+		glutPostRedisplay();
+	}
+	else if (key == 't') {
+		eye = vec4(105.0, 15.0, 1.8, 1.0);
+		at = vec4(105.0, 15.0, -3.0, 1.0);
+		glutPostRedisplay();
+	}
+	else if (key == 'w') {
+		eye = vec4(105.0, 15.0, 20.0, 1.0);
+		at = vec4(105.0, 15.0, -3.0, 1.0);
+		glutPostRedisplay();
+	}
+}
+
 void myReshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	GLfloat aspect = GLfloat(w) / h;
@@ -360,6 +399,7 @@ int main(int argc, char **argv) {
 	init();
 	glutDisplayFunc(myDisplay);
 	glutReshapeFunc(myReshape);
+	glutKeyboardFunc(myKeyboard);
 	glutMainLoop();
 	return 0;
 }
