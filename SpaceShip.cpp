@@ -33,7 +33,7 @@ GLint numVerticesOfPlanet;
 GLint numVerticesOfTorus;
 GLint numVerticesOfTetrahedron = 12;
 
-GLint radiusShip = 3.0;
+GLint radiusShip = 1.0;
 
 GLint ModelView, Projection;
 
@@ -74,7 +74,8 @@ vec4 ambient_colors[8] = { {0.30, 0.30, 0.30,1.0},
 {1.00, 1.00, 0.00,1.0},
 {1.00, 0.00, 1.00,1.0},
 {0.00, 1.00, 1.00,1.0},
-{1.00, 1.00, 1.00,1.0} };
+{1.00, 1.00, 1.00,1.0} };
+
 
 vec4 diffuse_colors[8] = { {0.30, 0.30, 0.30,1.0},
 {1.00, 0.00, 0.00,1.0},
@@ -83,14 +84,18 @@ vec4 diffuse_colors[8] = { {0.30, 0.30, 0.30,1.0},
 {1.00, 1.00, 0.00,1.0},
 {1.00, 0.00, 1.00,1.0},
 {0.00, 1.00, 1.00,1.0},
-{1.00, 1.00, 1.00,1.0} };vec4 specular_colors[8] = { {0.30, 0.30, 0.30,1.0},
+{1.00, 1.00, 1.00,1.0} };
+
+vec4 specular_colors[8] = { {0.30, 0.30, 0.30,1.0},
 {1.00, 0.00, 0.00,1.0},
 {0.00, 1.00, 0.00,1.0},
 {0.00, 0.00, 1.00,1.0},
 {1.00, 1.00, 0.00,1.0},
 {1.00, 0.00, 1.00,1.0},
 {0.00, 1.00, 1.00,1.0},
-{1.00, 1.00, 1.00,1.0} };
+{1.00, 1.00, 1.00,1.0} };
+
+
 
 int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseColor, const vec4 &specular) {
 	int numVertices = 0;
@@ -123,6 +128,8 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 			numVertices++;
 		}
 	}
+	
+
 	return numVertices;
 }
 
@@ -369,7 +376,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		isEyeMove = true;
 		eye.x = 105.0;
 		eye.y = 15.0;
-		eye.z = movedAway.z - radiusShip;
+		eye.z = movedAway.z - radiusShip*2;
 		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
@@ -385,7 +392,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		eye.y = 15.0;
 		at.x = eye.x;
 		at.y = eye.y;
-		eye.z = movedAway.z + radiusShip;
+		eye.z = movedAway.z  + radiusShip;
 		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
