@@ -143,32 +143,35 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 	}
 	planetCount++;
 
-	for (int i = 0; i < numVerticesOfCircle; i++) {
-		float angle = 2 * PI*i / numVerticesOfCircle;
-		float x = cos(angle)*(radius + 2.0);
-		float y = sin(angle)*(radius + 2.0);
-		float z = 0.0;
-		vec4 color = { 1.0,1.0,1.0,1.0 };
-		points.push_back(vec4(x, y, z, 1.0));
-		vec3 normalized = normalize(vec3(x, y, z));
-		normal.push_back(vec4(normalized, 0.0));
-		ambient_products.push_back(light_ambient*color);
-		diffuse_products.push_back(light_diffuse*color);
-		specular_products.push_back(light_specular*color);
+	if (planetCount < 9) {
+		for (int i = 0; i < numVerticesOfCircle; i++) {
+			float angle = 2 * PI*i / numVerticesOfCircle;
+			float x = cos(angle)*(radius + 2.0);
+			float y = sin(angle)*(radius + 2.0);
+			float z = 0.0;
+			vec4 color = { 1.0,1.0,1.0,1.0 };
+			points.push_back(vec4(x, y, z, 1.0));
+			vec3 normalized = normalize(vec3(x, y, z));
+			normal.push_back(vec4(normalized, 0.0));
+			ambient_products.push_back(light_ambient*color);
+			diffuse_products.push_back(light_diffuse*color);
+			specular_products.push_back(light_specular*color);
+		}
+		for (int i = 0; i < numVerticesOfCircle; i++) {
+			float angle = 2 * PI*i / numVerticesOfCircle;
+			float x = cos(angle)*(radius + 2.0);
+			float y = sin(angle)*(radius + 2.0);
+			float z = 0.0;
+			vec4 color = { 1.0,1.0,1.0,1.0 };
+			points.push_back(vec4(x, y, z, 1.0));
+			vec3 normalized = normalize(vec3(x, y, z));
+			normal.push_back(vec4(normalized, 0.0));
+			ambient_products.push_back(light_ambient*color);
+			diffuse_products.push_back(light_diffuse*color);
+			specular_products.push_back(light_specular*color);
+		}
 	}
-	for (int i = 0; i < numVerticesOfCircle; i++) {
-		float angle = 2 * PI*i / numVerticesOfCircle;
-		float x = cos(angle)*(radius + 2.0);
-		float y = sin(angle)*(radius + 2.0);
-		float z = 0.0;
-		vec4 color = { 1.0,1.0,1.0,1.0 };
-		points.push_back(vec4(x, y, z, 1.0));
-		vec3 normalized = normalize(vec3(x, y, z));
-		normal.push_back(vec4(normalized, 0.0));
-		ambient_products.push_back(light_ambient*color);
-		diffuse_products.push_back(light_diffuse*color);
-		specular_products.push_back(light_specular*color);
-	}
+	
 	if (planetCount == 9) { // station is drawn
 		vec4 point1 = { -0.5,0.5,-4.0,1.0 };
 		vec4 point2 = { -0.5,-0.5,-4.0,1.0 };
@@ -412,23 +415,19 @@ void myDisplay(void) {
 	glUniform3fv(thetaPos, 1, Theta);
 	glUniform4fv(translatePos, 1, translate);
 	glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet * 8 + numVerticesOfCircle * 16, numVerticesOfPlanet);
-	glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, 45.0));
-	glDrawArrays(GL_LINE_LOOP, numVerticesOfPlanet * 9 + numVerticesOfCircle * 16, numVerticesOfCircle);
-	glUniform3fv(thetaPos, 1, vec3(90.0, 0.0, 45.0));
-	glDrawArrays(GL_LINE_LOOP, numVerticesOfPlanet * 9 + numVerticesOfCircle * 17, numVerticesOfCircle);
-	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9 + numVerticesOfCircle * 18, 6);
+	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9 + numVerticesOfCircle * 16, 6);
 
 
 	glUniform3fv(thetaPos, 1, vec3(0.0, angle, 0.0));
 
 	for (int i = 0; i < 2; i++) {
 		glUniform4fv(translatePos, 1, translateShip);
-		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i + 6 + numVerticesOfCircle * 18, numVerticesOfTorus);
+		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i + 6 + numVerticesOfCircle * 16, numVerticesOfTorus);
 	}
 
 	glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, angle));
 	glUniform4fv(translatePos, 1, spaceshipCoord);
-	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9 + numVerticesOfTorus * 2 + 6 + numVerticesOfCircle * 18, numVerticesOfTetrahedron);
+	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9 + numVerticesOfTorus * 2 + 6 + numVerticesOfCircle * 16, numVerticesOfTetrahedron);
 
 	glutSwapBuffers();
 }
@@ -533,7 +532,7 @@ void rotateStation(int id) {
 		at = translateBack * rY *translate*at;
 	}
 
-	glutTimerFunc(500, rotateStation, 0);
+	glutTimerFunc(50, rotateStation, 0);
 	glutPostRedisplay();
 }
 void myReshape(GLsizei w, GLsizei h) {
