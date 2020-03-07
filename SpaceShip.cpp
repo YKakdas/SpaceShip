@@ -12,6 +12,9 @@ const GLint height = 1080;
 vector<point4> points;
 vector<point4> normal;
 
+enum modes { ModeC, ModeS, ModeT, ModeW };
+
+modes viewMode = ModeC;
 
 const double PI = 3.141592653589793238463;
 
@@ -19,7 +22,7 @@ const int meridians = 100;
 const int parallels = 100;
 
 
-point4 light_position(2.0, 3.0, 1200.0, 1.0); //wrt camera
+point4 light_position(2.0, 3.0, 300.0, 1.0); //wrt camera
 color4 light_ambient(0.2, 0.2, 0.2, 1.0);
 color4 light_diffuse(1.0, 1.0, 1.0, 1.0);
 color4 light_specular(1.0, 1.0, 1.0, 1.0);
@@ -41,13 +44,17 @@ GLint translatePos;
 vec4 translate;
 vec4 translateShip = vec4(105.0, 15.0, 0.0, 1.0);
 GLint thetaPos;
-vec3 Theta;
+vec3 Theta = { 0.0,0.0,0.0 };
 
+GLfloat angle = 0;
 point4 at(105.0, 15.0, -3.0, 1.0);
 point4 eye(105.0, 15.0, -0.8, 1.0);
 vec4 up(0.0, 1.0, 0.0, 0.0);
 
 vec4 direction(0.0, 0.0, -1.0, 0.0);
+GLfloat speed = 1.0;
+
+
 vec4 movedAway = (0.0, 0.0, 0.0, 1.0);
 bool isEyeMove = true;
 
@@ -60,6 +67,7 @@ vec4 planet_coords[8] = { {30, 30, -30,1},
 {150, 15, -40,1},
 {160, 22, -170,1} };
 
+vec4 spaceshipCoord = vec4(105.0, 15.0, 0.0, 1.0);
 vec4 stationCoord = vec4(100.0, 10.0, -10.0, 1.0);
 vec4 stationAmbient = vec4(0.5, 0.5, 0.5, 1.0);
 vec4 stationDiffuse = vec4(0.5, 0.5, 0.5, 1.0);
@@ -95,7 +103,8 @@ vec4 specular_colors[8] = { {0.30, 0.30, 0.30,1.0},
 {0.00, 1.00, 1.00,1.0},
 {1.00, 1.00, 1.00,1.0} };
 
-
+void triangle(const point4 &a, const point4 &b, const point4 &c);
+int planetCount = 0;
 
 int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseColor, const vec4 &specular) {
 	int numVertices = 0;
@@ -121,15 +130,28 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 			point4 point = { x,y,z,1.0 };
 			vec3 normalized = normalize(vec3(x, y, z));
 			normal.push_back(vec4(normalized, 0.0));
+			vec4 color = { 1.0,0.0,0.0,0.0 };
+
 			ambient_products.push_back(light_ambient*ambientColor);
 			diffuse_products.push_back(light_diffuse*diffuseColor);
 			specular_products.push_back(light_specular*specular);
+
+
 			points.push_back(point);
 			numVertices++;
 		}
 	}
-	
+	planetCount++;
 
+	if (planetCount == 9) { // station is drawn
+		vec4 point1 = { -0.5,0.5,-4.0,1.0 };
+		vec4 point2 = { -0.5,-0.5,-4.0,1.0 };
+		vec4 point3 = { 0.5,-0.5,-4.0,1.0 };
+		vec4 point4 = { 0.5,0.5,-4.0,1.0 };
+
+		triangle(point1, point2, point3);
+		triangle(point3, point4, point1);
+	}
 	return numVertices;
 }
 
@@ -268,9 +290,9 @@ void fillTetraHedron() {
 void init() {
 
 	for (int i = 0; i < 8; i++) {
-		numVerticesOfPlanet = fillPlanetPoints(2, ambient_colors[i], diffuse_colors[i], specular_colors[i]);
+		numVerticesOfPlanet = fillPlanetPoints(3, ambient_colors[i], diffuse_colors[i], specular_colors[i]);
 	}
-	fillPlanetPoints(3, stationAmbient, stationDiffuse, stationSpecular);
+	fillPlanetPoints(4, stationAmbient, stationDiffuse, stationSpecular);
 	fillTorus1();
 	fillTorus2();
 	fillTetraHedron();
@@ -352,16 +374,21 @@ void myDisplay(void) {
 	for (int i = 0; i < 8; i++) {
 		translate = planet_coords[i];
 		glUniform4fv(translatePos, 1, translate);
+		glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, 0.0));
 		glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet*i, numVerticesOfPlanet);
 	}
 
 	translate = stationCoord;
+	glUniform3fv(thetaPos, 1, Theta);
 	glUniform4fv(translatePos, 1, translate);
 	glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet * 8, numVerticesOfPlanet);
+	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9, 6);
+
+	glUniform3fv(thetaPos, 1, vec3(0.0, angle, 0.0));
 
 	for (int i = 0; i < 2; i++) {
 		glUniform4fv(translatePos, 1, translateShip);
-		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i, numVerticesOfTorus);
+		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i + 6, numVerticesOfTorus);
 	}
 
 	//	translate = vec4(105.0, 15.0, -2.8, 1.0);
@@ -373,46 +400,97 @@ void myDisplay(void) {
 
 void myKeyboard(unsigned char key, int x, int y) {
 	if (key == 'c') {
+		viewMode = ModeC;
 		isEyeMove = true;
-		eye.x = 105.0;
-		eye.y = 15.0;
-		eye.z = movedAway.z - radiusShip*2;
+		eye.x = spaceshipCoord.x;
+		eye.y = spaceshipCoord.y;
+		eye.z = spaceshipCoord.z - 4;
+		at.x = eye.x;
+		at.y = eye.y;
 		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
 	else if (key == 's') {
+		viewMode = ModeS;
 		isEyeMove = false;
-		eye = vec4(100.0, 10.0, -13.0, 1.0);
-		at = vec4(100.0, 10.0, -15.0, 1.0);
+		eye = vec4(100.0, 10.0, -14.0, 1.0);
+		at = vec4(100.0, 10.0, -16.0, 1.0);
 		glutPostRedisplay();
 	}
 	else if (key == 't') {
+		viewMode = ModeT;
 		isEyeMove = true;
-		eye.x = 105.0;
-		eye.y = 15.0;
+		eye.x = spaceshipCoord.x;
+		eye.y = spaceshipCoord.y;
+		eye.z = spaceshipCoord.z + 4;
 		at.x = eye.x;
 		at.y = eye.y;
-		eye.z = movedAway.z  + radiusShip;
 		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
 	else if (key == 'w') {
+		viewMode = ModeW;
 		isEyeMove = false;
-		eye = vec4(105.0, 15.0, 20.0, 1.0);
+		eye = vec4(105.0, 200.0, -1.0, 1.0);
 		at = vec4(105.0, 15.0, -3.0, 1.0);
 		glutPostRedisplay();
 	}
 }
-void myTimer(int id) {
+
+void mySpecialKeyboard(int key, int x, int y) {
+	if (angle == 360 || angle == -360) {
+		angle = 0.0;
+	}
+	if (key == GLUT_KEY_LEFT) {
+		angle += 5;
+		direction.x = -1.0*sin(angle*PI / 180);
+		direction.z = -1.0*cos(angle*PI / 180);
+	}
+	else if (key == GLUT_KEY_RIGHT) {
+		angle -= 5;
+		direction.x = -1.0*sin(angle*PI / 180);
+		direction.z = -1.0*cos(angle*PI / 180);
+	}
+}
+void moveSpaceship(int id) {
+	spaceshipCoord += direction;
 	translateShip += direction;
-	if (isEyeMove) {
+	if (viewMode == ModeC || viewMode == ModeT) {
 		eye += direction;
 		at += direction;
 	}
-	movedAway += direction;
-
+	
 	glutPostRedisplay();
-	glutTimerFunc(1000, myTimer, 0);
+	glutTimerFunc(500, moveSpaceship, 0);
+}
+
+void rotateStation(int id) {
+	Theta.y += 2.0;
+	if (viewMode == ModeS) {
+		mat4 translate = mat4(1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0 - eye.x, 0.0 - eye.y, 0.0 - eye.z, 1.0);
+		translate = transpose(translate);
+
+
+		mat4 rY = mat4(cos(Theta.y * PI / 180), 0.0, sin(Theta.y * PI / 180), 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			-sin(Theta.y * PI / 180), 0.0, cos(Theta.y * PI / 180), 0.0,
+			0.0, 0.0, 0.0, 1.0);
+
+		mat4 translateBack = mat4(1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			eye.x, eye.y, eye.z, 1.0);
+		translateBack = transpose(translateBack);
+
+		eye = translateBack * rY*translate*eye;
+		at = translateBack * rY *translate*at;
+	}
+
+	glutTimerFunc(500, rotateStation, 0);
+	glutPostRedisplay();
 }
 void myReshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
@@ -433,7 +511,9 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(myDisplay);
 	glutReshapeFunc(myReshape);
 	glutKeyboardFunc(myKeyboard);
-	glutTimerFunc(1000, myTimer, 0);
+	glutSpecialFunc(mySpecialKeyboard);
+	glutTimerFunc(1000, moveSpaceship, 0);
+	glutTimerFunc(1000, rotateStation, 0);
 	glutMainLoop();
 	return 0;
 }
