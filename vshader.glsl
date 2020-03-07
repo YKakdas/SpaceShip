@@ -66,7 +66,7 @@ void main()
 							0.0,1.0,0.0,0.0,
 							0.0,0.0,1.0,0.0,
 							TranslateVec.x,TranslateVec.y,TranslateVec.z,1.0);
-    gl_Position =Projection * ModelView * translate * rotateY * vPosition;
+    gl_Position =Projection * ModelView * translate * rotateZ * rotateY * rotateX * vPosition;
 
     color = ambient + diffuse + specular;
     color.a = 1.0;

@@ -2,6 +2,7 @@
 #include "Angel.h"
 #include <vector>
 #include <Math.h>
+#include <playsoundapi.h>
 
 using namespace Angel;
 using namespace std;
@@ -35,6 +36,7 @@ vector<point4> specular_products;
 GLint numVerticesOfPlanet;
 GLint numVerticesOfTorus;
 GLint numVerticesOfTetrahedron = 12;
+GLint numVerticesOfCircle = 100;
 
 GLint radiusShip = 1.0;
 
@@ -52,7 +54,7 @@ point4 eye(105.0, 15.0, -0.8, 1.0);
 vec4 up(0.0, 1.0, 0.0, 0.0);
 
 vec4 direction(0.0, 0.0, -1.0, 0.0);
-GLfloat speed = 1.0;
+GLfloat speed = 2.0;
 
 
 vec4 movedAway = (0.0, 0.0, 0.0, 1.0);
@@ -118,7 +120,6 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 		float xy = radius * cosf(meridianAngle);
 		float z = radius * sinf(meridianAngle);
 
-
 		for (int j = 0; j <= parallels; ++j)
 		{
 			parallelAngle = j * parallelStep;
@@ -130,7 +131,6 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 			point4 point = { x,y,z,1.0 };
 			vec3 normalized = normalize(vec3(x, y, z));
 			normal.push_back(vec4(normalized, 0.0));
-			vec4 color = { 1.0,0.0,0.0,0.0 };
 
 			ambient_products.push_back(light_ambient*ambientColor);
 			diffuse_products.push_back(light_diffuse*diffuseColor);
@@ -143,6 +143,32 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 	}
 	planetCount++;
 
+	for (int i = 0; i < numVerticesOfCircle; i++) {
+		float angle = 2 * PI*i / numVerticesOfCircle;
+		float x = cos(angle)*(radius + 2.0);
+		float y = sin(angle)*(radius + 2.0);
+		float z = 0.0;
+		vec4 color = { 1.0,1.0,1.0,1.0 };
+		points.push_back(vec4(x, y, z, 1.0));
+		vec3 normalized = normalize(vec3(x, y, z));
+		normal.push_back(vec4(normalized, 0.0));
+		ambient_products.push_back(light_ambient*color);
+		diffuse_products.push_back(light_diffuse*color);
+		specular_products.push_back(light_specular*color);
+	}
+	for (int i = 0; i < numVerticesOfCircle; i++) {
+		float angle = 2 * PI*i / numVerticesOfCircle;
+		float x = cos(angle)*(radius + 2.0);
+		float y = sin(angle)*(radius + 2.0);
+		float z = 0.0;
+		vec4 color = { 1.0,1.0,1.0,1.0 };
+		points.push_back(vec4(x, y, z, 1.0));
+		vec3 normalized = normalize(vec3(x, y, z));
+		normal.push_back(vec4(normalized, 0.0));
+		ambient_products.push_back(light_ambient*color);
+		diffuse_products.push_back(light_diffuse*color);
+		specular_products.push_back(light_specular*color);
+	}
 	if (planetCount == 9) { // station is drawn
 		vec4 point1 = { -0.5,0.5,-4.0,1.0 };
 		vec4 point2 = { -0.5,-0.5,-4.0,1.0 };
@@ -282,10 +308,10 @@ void triangle(const point4 &a, const point4 &b, const point4 &c) {
 }
 
 void fillTetraHedron() {
-	triangle(point4(-0.1, 0.0, 1.2, 1.0), point4(0.1, 0.0, 1.7, 1.0), point4(0.2, 0.0, 1.2, 1.0));
-	triangle(point4(0.1, 0.0, 1.2, 1.0), point4(0.0, 0.5 / 3, 1.5, 1.0), point4(0.0, 0.0, 1.7, 1.0));
-	triangle(point4(0.0, 0.5 / 3, 1.5, 1.0), point4(-0.1, 0.0, 1.2, 1.0), point4(0.0, 0.0, 1.7, 1.0));
-	triangle(point4(0.0, 0.5 / 3, 1.5, 1.0), point4(-0.1, 0.0, 1.2, 1.0), point4(0.2, 0.0, 1.2, 1.0));
+	triangle(point4(-0.1, 0.0, -3.2, 1.0), point4(0.0, 0.0, -2.7, 1.0), point4(0.1, 0.0, -3.2, 1.0));
+	triangle(point4(0.1, 0.0, -3.2, 1.0), point4(0.0, 0.2, -2.9, 1.0), point4(0.0, 0.0, -2.7, 1.0));
+	triangle(point4(0.0, 0.2, -2.9, 1.0), point4(-0.1, 0.0, -3.2, 1.0), point4(0.0, 0.0, -3.7, 1.0));
+	triangle(point4(0.0, 0.2, -2.9, 1.0), point4(-0.1, 0.0, -3.2, 1.0), point4(0.1, 0.0, -3.2, 1.0));
 }
 void init() {
 
@@ -375,39 +401,57 @@ void myDisplay(void) {
 		translate = planet_coords[i];
 		glUniform4fv(translatePos, 1, translate);
 		glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, 0.0));
-		glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet*i, numVerticesOfPlanet);
+		glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet*i + numVerticesOfCircle * i * 2, numVerticesOfPlanet);
+		glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, 45.0));
+		glDrawArrays(GL_LINE_LOOP, numVerticesOfPlanet*(i + 1) + numVerticesOfCircle * i * 2, numVerticesOfCircle);
+		glUniform3fv(thetaPos, 1, vec3(90.0, 0.0, 45.0));
+		glDrawArrays(GL_LINE_LOOP, numVerticesOfPlanet*(i + 1) + numVerticesOfCircle * (1 + 2 * i), numVerticesOfCircle);
 	}
 
 	translate = stationCoord;
 	glUniform3fv(thetaPos, 1, Theta);
 	glUniform4fv(translatePos, 1, translate);
-	glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet * 8, numVerticesOfPlanet);
-	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9, 6);
+	glDrawArrays(GL_TRIANGLE_FAN, numVerticesOfPlanet * 8 + numVerticesOfCircle * 16, numVerticesOfPlanet);
+	glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, 45.0));
+	glDrawArrays(GL_LINE_LOOP, numVerticesOfPlanet * 9 + numVerticesOfCircle * 16, numVerticesOfCircle);
+	glUniform3fv(thetaPos, 1, vec3(90.0, 0.0, 45.0));
+	glDrawArrays(GL_LINE_LOOP, numVerticesOfPlanet * 9 + numVerticesOfCircle * 17, numVerticesOfCircle);
+	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9 + numVerticesOfCircle * 18, 6);
+
 
 	glUniform3fv(thetaPos, 1, vec3(0.0, angle, 0.0));
 
 	for (int i = 0; i < 2; i++) {
 		glUniform4fv(translatePos, 1, translateShip);
-		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i + 6, numVerticesOfTorus);
+		glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 9 + numVerticesOfTorus * i + 6 + numVerticesOfCircle * 18, numVerticesOfTorus);
 	}
 
-	//	translate = vec4(105.0, 15.0, -2.8, 1.0);
-	//	glUniform4fv(translatePos, 1, translate);
-	//	glDrawArrays(GL_TRIANGLE_STRIP, numVerticesOfPlanet * 8 + numVerticesOfTorus * 2, numVerticesOfTetrahedron);
+	glUniform3fv(thetaPos, 1, vec3(0.0, 0.0, angle));
+	glUniform4fv(translatePos, 1, spaceshipCoord);
+	glDrawArrays(GL_TRIANGLES, numVerticesOfPlanet * 9 + numVerticesOfTorus * 2 + 6 + numVerticesOfCircle * 18, numVerticesOfTetrahedron);
 
 	glutSwapBuffers();
 }
 
 void myKeyboard(unsigned char key, int x, int y) {
+	if (key == 'a') {
+		speed -= 0.5;
+		if (speed < 0.0) {
+			speed = 0.0;
+		}
+	}
+	if (key == 'd') {
+		speed += 0.5;
+	}
 	if (key == 'c') {
 		viewMode = ModeC;
 		isEyeMove = true;
 		eye.x = spaceshipCoord.x;
 		eye.y = spaceshipCoord.y;
-		eye.z = spaceshipCoord.z - 4;
+		eye.z = spaceshipCoord.z - 2;
 		at.x = eye.x;
 		at.y = eye.y;
-		at.z = eye.z - 2;
+		at.z = eye.z - 1;
 		glutPostRedisplay();
 	}
 	else if (key == 's') {
@@ -421,7 +465,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		viewMode = ModeT;
 		isEyeMove = true;
 		eye.x = spaceshipCoord.x;
-		eye.y = spaceshipCoord.y;
+		eye.y = spaceshipCoord.y + 2.0;
 		eye.z = spaceshipCoord.z + 4;
 		at.x = eye.x;
 		at.y = eye.y;
@@ -443,23 +487,23 @@ void mySpecialKeyboard(int key, int x, int y) {
 	}
 	if (key == GLUT_KEY_LEFT) {
 		angle += 5;
-		direction.x = -1.0*sin(angle*PI / 180);
-		direction.z = -1.0*cos(angle*PI / 180);
+		direction.x = -1.0*sin(angle*PI / 180)*speed;
+		direction.z = -1.0*cos(angle*PI / 180)*speed;
 	}
 	else if (key == GLUT_KEY_RIGHT) {
 		angle -= 5;
-		direction.x = -1.0*sin(angle*PI / 180);
-		direction.z = -1.0*cos(angle*PI / 180);
+		direction.x = -1.0*sin(angle*PI / 180)*speed;
+		direction.z = -1.0*cos(angle*PI / 180)*speed;
 	}
 }
 void moveSpaceship(int id) {
-	spaceshipCoord += direction;
-	translateShip += direction;
+	spaceshipCoord += direction * speed;
+	translateShip += direction * speed;
 	if (viewMode == ModeC || viewMode == ModeT) {
-		eye += direction;
-		at += direction;
+		eye += direction * speed;
+		at += direction * speed;
 	}
-	
+
 	glutPostRedisplay();
 	glutTimerFunc(500, moveSpaceship, 0);
 }
