@@ -510,26 +510,14 @@ void moveSpaceship(int id) {
 void rotateStation(int id) {
 	Theta.y += 2.0;
 	if (viewMode == ModeS) {
-		mat4 translate = mat4(1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0 - eye.x, 0.0 - eye.y, 0.0 - eye.z, 1.0);
-		translate = transpose(translate);
-
-
+	
 		mat4 rY = mat4(cos(Theta.y * PI / 180), 0.0, sin(Theta.y * PI / 180), 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			-sin(Theta.y * PI / 180), 0.0, cos(Theta.y * PI / 180), 0.0,
 			0.0, 0.0, 0.0, 1.0);
 
-		mat4 translateBack = mat4(1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			eye.x, eye.y, eye.z, 1.0);
-		translateBack = transpose(translateBack);
-
-		eye = translateBack * rY*translate*eye;
-		at = translateBack * rY *translate*at;
+		eye = rY * vec4{ 0.0,0.0,-4.0,1.0 } + stationCoord;
+		at = rY * vec4(0.0, 0.0, -5.0, 1.0) + stationCoord;
 	}
 
 	glutTimerFunc(50, rotateStation, 0);
