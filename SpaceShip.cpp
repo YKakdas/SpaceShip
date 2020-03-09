@@ -1,113 +1,15 @@
-#include <iostream>
-#include "Angel.h"
-#include <vector>
-#include <Math.h>
-#include <playsoundapi.h>
-
-using namespace Angel;
-using namespace std;
-typedef vec4 point4;
-typedef vec4 color4;
-const GLint width = 1920;
-const GLint height = 1080;
-vector<point4> points;
-vector<point4> normal;
-
-enum modes { ModeC, ModeS, ModeT, ModeW };
-
-modes viewMode = ModeC;
-
-const double PI = 3.141592653589793238463;
-
-const int meridians = 100;
-const int parallels = 100;
+#include "SpaceShip.h"
 
 
-point4 light_position(2.0, 3.0, 300.0, 1.0); //wrt camera
-color4 light_ambient(0.2, 0.2, 0.2, 1.0);
-color4 light_diffuse(1.0, 1.0, 1.0, 1.0);
-color4 light_specular(1.0, 1.0, 1.0, 1.0);
 
 
-vector<point4> ambient_products;
-vector<point4> diffuse_products;
-vector<point4> specular_products;
+void playSound() {
+	PlaySound(TEXT("starwars.wav"), NULL, SND_LOOP | SND_ASYNC);
+}
 
-GLint numVerticesOfPlanet;
-GLint numVerticesOfTorus;
-GLint numVerticesOfTetrahedron = 12;
-GLint numVerticesOfCircle = 100;
-
-GLint radiusShip = 1.0;
-
-GLint ModelView, Projection;
-
-GLint translatePos;
-vec4 translate;
-vec4 translateShip = vec4(105.0, 15.0, 0.0, 1.0);
-GLint thetaPos;
-vec3 Theta = { 0.0,0.0,0.0 };
-
-GLfloat angle = 0;
-point4 at(105.0, 15.0, -3.0, 1.0);
-point4 eye(105.0, 15.0, -0.8, 1.0);
-vec4 up(0.0, 1.0, 0.0, 0.0);
-
-vec4 direction(0.0, 0.0, -1.0, 0.0);
-GLfloat speed = 2.0;
-
-
-vec4 movedAway = (0.0, 0.0, 0.0, 1.0);
-bool isEyeMove = true;
-
-vec4 planet_coords[8] = { {30, 30, -30,1},
-{30, 15,-170,1},
-{80, 25,-110,1},
-{70, 12,-60,1},
-{90, 13,-150,1},
-{120, 17,-80,1},
-{150, 15, -40,1},
-{160, 22, -170,1} };
-
-vec4 spaceshipCoord = vec4(105.0, 15.0, 0.0, 1.0);
-vec4 stationCoord = vec4(100.0, 10.0, -10.0, 1.0);
-vec4 stationAmbient = vec4(0.5, 0.5, 0.5, 1.0);
-vec4 stationDiffuse = vec4(0.5, 0.5, 0.5, 1.0);
-vec4 stationSpecular = vec4(0.5, 0.5, 0.5, 1.0);
-
-
-/*colors(rgb) for each planet */
-vec4 ambient_colors[8] = { {0.30, 0.30, 0.30,1.0},
-{1.00, 0.00, 0.00,1.0},
-{0.00, 1.00, 0.00,1.0},
-{0.00, 0.00, 1.00,1.0},
-{1.00, 1.00, 0.00,1.0},
-{1.00, 0.00, 1.00,1.0},
-{0.00, 1.00, 1.00,1.0},
-{1.00, 1.00, 1.00,1.0} };
-
-
-vec4 diffuse_colors[8] = { {0.30, 0.30, 0.30,1.0},
-{1.00, 0.00, 0.00,1.0},
-{0.00, 1.00, 0.00,1.0},
-{0.00, 0.00, 1.00,1.0},
-{1.00, 1.00, 0.00,1.0},
-{1.00, 0.00, 1.00,1.0},
-{0.00, 1.00, 1.00,1.0},
-{1.00, 1.00, 1.00,1.0} };
-
-vec4 specular_colors[8] = { {0.30, 0.30, 0.30,1.0},
-{1.00, 0.00, 0.00,1.0},
-{0.00, 1.00, 0.00,1.0},
-{0.00, 0.00, 1.00,1.0},
-{1.00, 1.00, 0.00,1.0},
-{1.00, 0.00, 1.00,1.0},
-{0.00, 1.00, 1.00,1.0},
-{1.00, 1.00, 1.00,1.0} };
-
-void triangle(const point4 &a, const point4 &b, const point4 &c);
-int planetCount = 0;
-
+void stopSound() {
+	PlaySound(NULL, NULL, SND_LOOP | SND_ASYNC);
+}
 int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseColor, const vec4 &specular) {
 	int numVertices = 0;
 	float parallelStep = 2 * PI / parallels;
@@ -171,12 +73,17 @@ int fillPlanetPoints(int radius, const vec4 &ambientColor, const vec4 &diffuseCo
 			specular_products.push_back(light_specular*color);
 		}
 	}
-	
+
 	if (planetCount == 9) { // station is drawn
-		vec4 point1 = { -0.5,0.5,-4.0,1.0 };
-		vec4 point2 = { -0.5,-0.5,-4.0,1.0 };
-		vec4 point3 = { 0.5,-0.5,-4.0,1.0 };
-		vec4 point4 = { 0.5,0.5,-4.0,1.0 };
+		mat4 rY = mat4(cos(90 * PI / 180), 0.0, sin(90 * PI / 180), 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			-sin(90 * PI / 180), 0.0, cos(90 * PI / 180), 0.0,
+			0.0, 0.0, 0.0, 1.0);
+
+		vec4 point1 = rY * vec4{ -0.5,0.5,-4.0,1.0 };
+		vec4 point2 = rY * vec4{ -0.5,-0.5,-4.0,1.0 };
+		vec4 point3 = rY * vec4{ 0.5,-0.5,-4.0,1.0 };
+		vec4 point4 = rY * vec4{ 0.5,0.5,-4.0,1.0 };
 
 		triangle(point1, point2, point3);
 		triangle(point3, point4, point1);
@@ -432,19 +339,66 @@ void myDisplay(void) {
 	glutSwapBuffers();
 }
 
+void moveSpaceship(int id) {
+	if (isPaused) return;
+	spaceshipCoord += direction * moveSpeed;
+	translateShip += direction * moveSpeed;
+	if (viewMode == ModeC || viewMode == ModeT) {
+		eye += direction * moveSpeed;
+		at += direction * moveSpeed;
+	}
+
+	glutPostRedisplay();
+	glutTimerFunc(500, moveSpaceship, 0);
+}
+
+void rotateStation(int id) {
+	if (isPaused) return;
+	Theta.y += rotationSpeed;
+	if (viewMode == ModeS) {
+
+		mat4 rY = mat4(cos(Theta.y * PI / 180), 0.0, sin(Theta.y * PI / 180), 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			-sin(Theta.y * PI / 180), 0.0, cos(Theta.y * PI / 180), 0.0,
+			0.0, 0.0, 0.0, 1.0);
+
+		eye = rY * vec4{ 0.0,0.0,-4.0,1.0 } +stationCoord;
+		at = rY * vec4(0.0, 0.0, -5.0, 1.0) + stationCoord;
+	}
+
+	glutTimerFunc(50, rotateStation, 0);
+	glutPostRedisplay();
+}
+
 void myKeyboard(unsigned char key, int x, int y) {
-	if (key == 'a') {
-		speed -= 0.5;
-		if (speed < 0.0) {
-			speed = 0.0;
+	if (key == 'p' || key == 'P') {
+		isPaused = !isPaused;
+		if (isPaused) {
+			stopSound();
+			return;
+		}
+		else {
+			playSound();
+			glutTimerFunc(0, moveSpaceship, 0);
+			glutTimerFunc(0, rotateStation, 0);
 		}
 	}
-	if (key == 'd') {
-		speed += 0.5;
+
+	if (isPaused && !isOneStep) return;
+	if (viewMode != ModeS) {
+		if (key == 'a' || key == 'A') {
+			moveSpeed -= 0.5;
+			if (moveSpeed < 0.0) {
+				moveSpeed = 0.0;
+			}
+		}
+		if (key == 'd' || key == 'D') {
+			moveSpeed += 0.5;
+		}
 	}
-	if (key == 'c') {
+
+	if (key == 'c' || key == 'C') {
 		viewMode = ModeC;
-		isEyeMove = true;
 		eye.x = spaceshipCoord.x;
 		eye.y = spaceshipCoord.y;
 		eye.z = spaceshipCoord.z - 2;
@@ -453,16 +407,15 @@ void myKeyboard(unsigned char key, int x, int y) {
 		at.z = eye.z - 1;
 		glutPostRedisplay();
 	}
-	else if (key == 's') {
+	else if (key == 's' || key == 'S') {
 		viewMode = ModeS;
-		isEyeMove = false;
-		eye = vec4(100.0, 10.0, -14.0, 1.0);
-		at = vec4(100.0, 10.0, -16.0, 1.0);
+		eye = stationCoord;
+		at = eye;
+		at.z -= 2;
 		glutPostRedisplay();
 	}
-	else if (key == 't') {
+	else if (key == 't' || key == 'T') {
 		viewMode = ModeT;
-		isEyeMove = true;
 		eye.x = spaceshipCoord.x;
 		eye.y = spaceshipCoord.y + 2.0;
 		eye.z = spaceshipCoord.z + 4;
@@ -471,58 +424,72 @@ void myKeyboard(unsigned char key, int x, int y) {
 		at.z = eye.z - 2;
 		glutPostRedisplay();
 	}
-	else if (key == 'w') {
+	else if (key == 'w' || key == 'W') {
 		viewMode = ModeW;
-		isEyeMove = false;
 		eye = vec4(105.0, 200.0, -1.0, 1.0);
 		at = vec4(105.0, 15.0, -3.0, 1.0);
 		glutPostRedisplay();
 	}
+	else if (key == 'j' || key == 'J') {
+		rotationSpeed += 2.0;
+	}
+	else if (key == 'k' || key == 'K') {
+		rotationSpeed -= 2.0;
+		if (rotationSpeed < 0) rotationSpeed = 0.0;
+	}
+}
+
+void myMouse(int btn, int state, int x, int y) {
+	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+		outputDebugInfo();
+		if (!isPaused) { // if game is not paused,first pause it
+			isPaused = !isPaused;
+			stopSound();
+		}
+		else { // if game is paused
+			isPaused = false;
+			isOneStep = true;
+			playSound();
+			moveSpaceship(0);
+			rotateStation(0);
+			stopSound();
+			isPaused = true;
+		}
+	}
 }
 
 void mySpecialKeyboard(int key, int x, int y) {
+	if (isPaused && !isOneStep) return;
 	if (angle == 360 || angle == -360) {
 		angle = 0.0;
 	}
-	if (key == GLUT_KEY_LEFT) {
-		angle += 5;
-		direction.x = -1.0*sin(angle*PI / 180)*speed;
-		direction.z = -1.0*cos(angle*PI / 180)*speed;
-	}
-	else if (key == GLUT_KEY_RIGHT) {
-		angle -= 5;
-		direction.x = -1.0*sin(angle*PI / 180)*speed;
-		direction.z = -1.0*cos(angle*PI / 180)*speed;
+	if (viewMode != ModeS) {
+		if (key == GLUT_KEY_LEFT) {
+			angle += 5;
+			direction.x = -1.0*sin(angle*PI / 180)*moveSpeed;
+			direction.z = -1.0*cos(angle*PI / 180)*moveSpeed;
+		}
+		else if (key == GLUT_KEY_RIGHT) {
+			angle -= 5;
+			direction.x = -1.0*sin(angle*PI / 180)*moveSpeed;
+			direction.z = -1.0*cos(angle*PI / 180)*moveSpeed;
+		}
 	}
 }
-void moveSpaceship(int id) {
-	spaceshipCoord += direction * speed;
-	translateShip += direction * speed;
-	if (viewMode == ModeC || viewMode == ModeT) {
-		eye += direction * speed;
-		at += direction * speed;
-	}
 
-	glutPostRedisplay();
-	glutTimerFunc(500, moveSpaceship, 0);
+void outputDebugInfo() {
+	vec4 normalizedDirection = normalize(direction);
+	cout << "\x1B[2J\x1B[H";
+	cout << "View Mode is : " << viewModeArr[viewMode] << "\n";
+	cout << "Spaceship coordinates : (" << spaceshipCoord.x << "," << spaceshipCoord.y << "," << spaceshipCoord.z << ")\n";
+	cout << "Spaceship direction : (" << normalizedDirection.x << "," << normalizedDirection.y << "," << normalizedDirection.z << ")\n";
+	cout << "Spaceship velocity : " << moveSpeed << "\n";
+	cout << "----------------------------------------------------------------->";
+	cout << "Station coordinates : (" << stationCoord.x << "," << stationCoord.y << "," << stationCoord.z << ")\n";
+	cout << "Spaceship rotation angel : " << angle << "\n";
+	cout << "----------------------------------------------------------------->";
 }
 
-void rotateStation(int id) {
-	Theta.y += 2.0;
-	if (viewMode == ModeS) {
-	
-		mat4 rY = mat4(cos(Theta.y * PI / 180), 0.0, sin(Theta.y * PI / 180), 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			-sin(Theta.y * PI / 180), 0.0, cos(Theta.y * PI / 180), 0.0,
-			0.0, 0.0, 0.0, 1.0);
-
-		eye = rY * vec4{ 0.0,0.0,-4.0,1.0 } + stationCoord;
-		at = rY * vec4(0.0, 0.0, -5.0, 1.0) + stationCoord;
-	}
-
-	glutTimerFunc(50, rotateStation, 0);
-	glutPostRedisplay();
-}
 void myReshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	GLfloat aspect = GLfloat(w) / h;
@@ -535,7 +502,7 @@ int main(int argc, char **argv) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(width, height);
 	glutInitWindowPosition(0, 0);
-	glutCreateWindow("Sphere");
+	glutCreateWindow("3D Space Simulation");
 	glewExperimental = GL_TRUE;
 	glewInit();
 	init();
@@ -543,8 +510,10 @@ int main(int argc, char **argv) {
 	glutReshapeFunc(myReshape);
 	glutKeyboardFunc(myKeyboard);
 	glutSpecialFunc(mySpecialKeyboard);
+	glutMouseFunc(myMouse);
 	glutTimerFunc(1000, moveSpaceship, 0);
 	glutTimerFunc(1000, rotateStation, 0);
+	playSound();
 	glutMainLoop();
 	return 0;
 }
