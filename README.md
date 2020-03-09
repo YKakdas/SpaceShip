@@ -31,6 +31,10 @@ above the spacehip.
 state of the simulation is advanced by one step, and then the program outputs all the simulation’s current state to standard output includes the locations, directions and 
 speeds of the ship/station. By repeatedly hitting the right button the program will perform consecutive single steps.
 
+#### Implementation
+
+- Implemented with shader based OpenGL(modern OpenGL) and used Gouraud shading for objects.
+
 #### WARNING
 If you get error like "illegal non-ASCII character" from glsl files, change vshader.glsl and fshader.glsl file endings from crlf to lf, and then run the program again.
 
