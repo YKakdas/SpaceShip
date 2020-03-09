@@ -484,7 +484,7 @@ void outputDebugInfo() {
 	cout << "Spaceship coordinates : (" << spaceshipCoord.x << "," << spaceshipCoord.y << "," << spaceshipCoord.z << ")\n";
 	cout << "Spaceship direction : (" << normalizedDirection.x << "," << normalizedDirection.y << "," << normalizedDirection.z << ")\n";
 	cout << "Spaceship velocity : " << moveSpeed << "\n";
-	cout << "----------------------------------------------------------------->";
+	cout << "----------------------------------------------------------------->\n";
 	cout << "Station coordinates : (" << stationCoord.x << "," << stationCoord.y << "," << stationCoord.z << ")\n";
 	cout << "Spaceship rotation angel : " << angle << "\n";
 	cout << "----------------------------------------------------------------->";
